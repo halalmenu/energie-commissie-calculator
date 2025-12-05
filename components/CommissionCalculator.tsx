@@ -57,10 +57,15 @@ export default function CommissionCalculator() {
         return;
       }
 
-      const kwhValue = Number(kwhInput) || 0;
-      const m3Value = Number(m3Input) || 0;
+      const kwhInputValue = Number(kwhInput) || 0;
+      const m3InputValue = Number(m3Input) || 0;
       const elecEanValue = Number(elecEanCount) || 0;
       const gasEanValue = Number(gasEanCount) || 0;
+
+      // Verbruiksvergoedingen moeten op 3 jaar basis berekend worden
+      // Bij 3 jaar: verbruik * 3, bij 1 jaar: verbruik zoals het is (wordt later gedeeld door 3)
+      const kwhValue = contractDuration === 3 ? kwhInputValue * 3 : kwhInputValue;
+      const m3Value = contractDuration === 3 ? m3InputValue * 3 : m3InputValue;
 
       const calculated = rules.map((rule: CommissionRule) => {
         let electricityComm = 0;
@@ -98,7 +103,7 @@ export default function CommissionCalculator() {
           gasComm = (m3Value * (rule.rate_per_m3 || 0));
         }
 
-        // 3. Base Fees
+        // 3. Base Fees (vaste vergoedingen blijven zoals ze zijn)
         if (!rule.has_tiered_pricing) {
            const eanRate = Number(rule.rate_per_ean || 0);
            baseFee = (elecEanValue + gasEanValue) * eanRate;
@@ -113,7 +118,7 @@ export default function CommissionCalculator() {
           details += `Applied ${rule.percentage_modifier}% modifier (Original: €${original.toFixed(2)}); `;
         }
 
-        // 5. Contract Duration Adjustment
+        // 5. Contract Duration Adjustment (alleen voor 1 jaar contracten)
         if (contractDuration === 1) {
             const originalTotal = total;
             electricityComm = electricityComm / 3;
