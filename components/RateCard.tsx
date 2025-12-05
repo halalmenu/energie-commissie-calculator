@@ -12,14 +12,23 @@ export default function RateCard() {
 
   useEffect(() => {
     const fetchRules = async () => {
+      // Haal alleen Standard regels op
+      const { data: standardRole } = await supabase
+        .from('energy_agent_roles')
+        .select('id')
+        .eq('name', 'Standard')
+        .single();
+
+      if (!standardRole) return;
+
       const { data } = await supabase
         .from('energy_commission_rules')
         .select(`
           *,
           supplier:energy_suppliers(name),
-          role:energy_agent_roles(name),
           tiers:energy_tiered_rates(*)
         `)
+        .eq('role_id', standardRole.id)
         .order('supplier_id');
       
       if (data) setRules(data);
@@ -41,7 +50,6 @@ export default function RateCard() {
             <TableHeader>
               <TableRow>
                 <TableHead>Leverancier</TableHead>
-                <TableHead>Rol</TableHead>
                 <TableHead>Per kWh</TableHead>
                 <TableHead>Per m³</TableHead>
                 <TableHead>Vaste Vergoeding</TableHead>
@@ -53,10 +61,6 @@ export default function RateCard() {
                 <TableRow key={rule.id}>
                   <TableCell className="font-medium">
                     {rule.supplier?.name}
-                  </TableCell>
-                  <TableCell>
-                    {/* @ts-ignore: Joined property */}
-                    <Badge variant="outline">{rule.role?.name}</Badge>
                   </TableCell>
                   <TableCell>
                     {rule.has_tiered_pricing ? (

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Supplier, AgentRole, CommissionRule, CalculationResult, TieredRate } from '@/types';
-import { Calculator, Zap, Flame, Users, Euro, Info, Calendar, TrendingUp } from 'lucide-react';
+import { Calculator, Zap, Flame, Euro, Info, Calendar, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,8 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import RateCard from './RateCard';
 
 export default function CommissionCalculator() {
-  const [roles, setRoles] = useState<AgentRole[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [standardRoleId, setStandardRoleId] = useState<string>('');
   const [contractDuration, setContractDuration] = useState<number>(3);
   const [kwhInput, setKwhInput] = useState<string>('3500');
   const [m3Input, setM3Input] = useState<string>('1200');
@@ -26,20 +25,24 @@ export default function CommissionCalculator() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchRoles();
+    fetchStandardRole();
   }, []);
 
-  const fetchRoles = async () => {
-    const { data, error } = await supabase.from('energy_agent_roles').select('*');
+  const fetchStandardRole = async () => {
+    const { data, error } = await supabase
+      .from('energy_agent_roles')
+      .select('*')
+      .eq('name', 'Standard')
+      .single();
+    
     if (data) {
-      setRoles(data);
-      const standard = data.find(r => r.name === 'Standard');
-      if (standard) setSelectedRole(standard.id);
-      else if (data.length > 0) setSelectedRole(data[0].id);
+      setStandardRoleId(data.id);
     }
   };
 
   const calculateCommissions = async () => {
+    if (!standardRoleId) return;
+    
     setLoading(true);
     try {
       const { data: rules, error } = await supabase
@@ -49,7 +52,7 @@ export default function CommissionCalculator() {
           supplier:energy_suppliers(*),
           tiers:energy_tiered_rates(*)
         `)
-        .eq('role_id', selectedRole);
+        .eq('role_id', standardRoleId);
 
       if (error || !rules) {
         console.error('Error fetching rules:', error);
@@ -166,44 +169,24 @@ export default function CommissionCalculator() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Role & Duration */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="role" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Rol
-                  </Label>
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger id="role" className="w-full">
-                      <SelectValue placeholder="Selecteer rol" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map(role => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="duration" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Looptijd
-                  </Label>
-                  <Select 
-                    value={contractDuration.toString()} 
-                    onValueChange={(val) => setContractDuration(Number(val))}
-                  >
-                    <SelectTrigger id="duration" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 Jaar</SelectItem>
-                      <SelectItem value="1">1 Jaar</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Contract Duration */}
+              <div className="space-y-2">
+                <Label htmlFor="duration" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Looptijd
+                </Label>
+                <Select 
+                  value={contractDuration.toString()} 
+                  onValueChange={(val) => setContractDuration(Number(val))}
+                >
+                  <SelectTrigger id="duration" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 Jaar</SelectItem>
+                    <SelectItem value="1">1 Jaar</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Separator />
@@ -267,7 +250,7 @@ export default function CommissionCalculator() {
 
               <Button 
                 onClick={calculateCommissions}
-                disabled={loading || !selectedRole}
+                disabled={loading || !standardRoleId}
                 className="w-full"
                 size="lg"
               >
