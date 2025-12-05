@@ -17,10 +17,10 @@ export default function CommissionCalculator() {
   const [roles, setRoles] = useState<AgentRole[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [contractDuration, setContractDuration] = useState<number>(3);
-  const [kwhInput, setKwhInput] = useState<number>(3500);
-  const [m3Input, setM3Input] = useState<number>(1200);
-  const [elecEanCount, setElecEanCount] = useState<number>(1);
-  const [gasEanCount, setGasEanCount] = useState<number>(1);
+  const [kwhInput, setKwhInput] = useState<string>('3500');
+  const [m3Input, setM3Input] = useState<string>('1200');
+  const [elecEanCount, setElecEanCount] = useState<string>('1');
+  const [gasEanCount, setGasEanCount] = useState<string>('1');
   
   const [results, setResults] = useState<CalculationResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,6 +57,11 @@ export default function CommissionCalculator() {
         return;
       }
 
+      const kwhValue = Number(kwhInput) || 0;
+      const m3Value = Number(m3Input) || 0;
+      const elecEanValue = Number(elecEanCount) || 0;
+      const gasEanValue = Number(gasEanCount) || 0;
+
       const calculated = rules.map((rule: CommissionRule) => {
         let electricityComm = 0;
         let gasComm = 0;
@@ -67,36 +72,36 @@ export default function CommissionCalculator() {
         if (rule.has_tiered_pricing && rule.tiers) {
           const elecTier = rule.tiers.find(t => 
             t.product_type === 'electricity' && 
-            kwhInput >= t.min_volume && 
-            (t.max_volume === null || kwhInput < t.max_volume)
+            kwhValue >= t.min_volume && 
+            (t.max_volume === null || kwhValue < t.max_volume)
           );
           if (elecTier) {
             electricityComm = Number(elecTier.fixed_fee);
             details += `Tier Elec: €${elecTier.fixed_fee} (Range: ${elecTier.min_volume}-${elecTier.max_volume || '+'}); `;
           }
         } else {
-          electricityComm = (kwhInput * (rule.rate_per_kwh || 0));
+          electricityComm = (kwhValue * (rule.rate_per_kwh || 0));
         }
 
         // 2. Gas Calculation
         if (rule.has_tiered_pricing && rule.tiers) {
            const gasTier = rule.tiers.find(t => 
             t.product_type === 'gas' && 
-            m3Input >= t.min_volume && 
-            (t.max_volume === null || m3Input < t.max_volume)
+            m3Value >= t.min_volume && 
+            (t.max_volume === null || m3Value < t.max_volume)
           );
           if (gasTier) {
             gasComm = Number(gasTier.fixed_fee);
             details += `Tier Gas: €${gasTier.fixed_fee} (Range: ${gasTier.min_volume}-${gasTier.max_volume || '+'}); `;
           }
         } else {
-          gasComm = (m3Input * (rule.rate_per_m3 || 0));
+          gasComm = (m3Value * (rule.rate_per_m3 || 0));
         }
 
         // 3. Base Fees
         if (!rule.has_tiered_pricing) {
            const eanRate = Number(rule.rate_per_ean || 0);
-           baseFee = (elecEanCount + gasEanCount) * eanRate;
+           baseFee = (elecEanValue + gasEanValue) * eanRate;
         }
 
         let total = electricityComm + gasComm + baseFee;
@@ -209,7 +214,7 @@ export default function CommissionCalculator() {
                     id="kwh"
                     type="number"
                     value={kwhInput}
-                    onChange={(e) => setKwhInput(Number(e.target.value))}
+                    onChange={(e) => setKwhInput(e.target.value)}
                     placeholder="3500"
                   />
                 </div>
@@ -223,7 +228,7 @@ export default function CommissionCalculator() {
                     id="m3"
                     type="number"
                     value={m3Input}
-                    onChange={(e) => setM3Input(Number(e.target.value))}
+                    onChange={(e) => setM3Input(e.target.value)}
                     placeholder="1200"
                   />
                 </div>
@@ -239,7 +244,7 @@ export default function CommissionCalculator() {
                     id="elec-ean"
                     type="number"
                     value={elecEanCount}
-                    onChange={(e) => setElecEanCount(Number(e.target.value))}
+                    onChange={(e) => setElecEanCount(e.target.value)}
                     min={0}
                   />
                 </div>
@@ -249,7 +254,7 @@ export default function CommissionCalculator() {
                     id="gas-ean"
                     type="number"
                     value={gasEanCount}
-                    onChange={(e) => setGasEanCount(Number(e.target.value))}
+                    onChange={(e) => setGasEanCount(e.target.value)}
                     min={0}
                   />
                 </div>
