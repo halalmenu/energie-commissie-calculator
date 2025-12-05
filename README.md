@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Energie Commissie Calculator
 
-## Getting Started
+Een moderne Next.js applicatie voor het berekenen en vergelijken van energie commissies per leverancier.
 
-First, run the development server:
+## Features
+
+- 📊 **Commissie Berekening**: Bereken commissies op basis van verbruik (kWh en m³)
+- 🏢 **Per Leverancier**: Vergelijk commissies tussen verschillende energie leveranciers
+- 👥 **Rol-specifieke Tarieven**: Ondersteuning voor verschillende agent rollen (Standard, Morta, Noyan, Auke)
+- 📅 **Contract Duur**: Ondersteuning voor 1-jarige en 3-jarige contracten
+- 💰 **Tiered Pricing**: Ondersteuning voor gestaffelde tarieven (bijv. Engie)
+- 🎨 **Modern UI**: Gebouwd met Shadcn/ui componenten en Tailwind CSS
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **UI Library**: Shadcn/ui
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **Language**: TypeScript
+- **Icons**: Lucide React
+
+## Installatie
 
 ```bash
+# Clone de repository
+git clone https://github.com/halalmenu/energie-commissie-calculator.git
+
+# Installeer dependencies
+npm install
+
+# Maak een .env.local bestand aan met je Supabase credentials
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Start de development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+De applicatie gebruikt Supabase voor data opslag. Zorg ervoor dat je de volgende tabellen hebt:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `energy_suppliers` - Leveranciers
+- `energy_agent_roles` - Agent rollen
+- `energy_commission_rules` - Commissie regels
+- `energy_tiered_rates` - Gestaffelde tarieven
 
-## Learn More
+## Gebruik
 
-To learn more about Next.js, take a look at the following resources:
+1. Selecteer een rol/agent
+2. Kies de contractduur (1 of 3 jaar)
+3. Voer het verbruik in (kWh en m³)
+4. Voer het aantal EANs in
+5. Klik op "Bereken Commissies"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+De applicatie toont alle leveranciers met hun berekende commissies, gesorteerd van hoog naar laag.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Commissie Berekening
 
-## Deploy on Vercel
+- **3-jarige contracten**: Volledige commissie zoals opgegeven in de database
+- **1-jarige contracten**: Commissie wordt gedeeld door 3
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Licentie
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
